@@ -9,7 +9,7 @@ RUN apt-get update && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
-    RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.14 1
+RUN update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.14 1
 
 RUN pip install --break-system-packages --upgrade argcomplete mypy pytest pytest-cov pytest-asyncio black wemake-python-styleguide cohesion dlint pytest-xdist vulture isort jupyter pipenv uv openai
 
