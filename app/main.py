@@ -101,8 +101,8 @@ def get_answer(client: OpenAI, prompt: str) -> str:
         function = tool_call.function
         arguments = json.loads(function.arguments)
         if function.name == "Read":
-            tool_data: str | None = my_tools.read(file_path=arguments["file_path"])
-        elif function.name == "Wrire":
+            tool_data = my_tools.read(file_path=arguments["file_path"])
+        elif function.name == "Write":
             tool_data = my_tools.write(
                 file_path=arguments["file_path"], content=arguments["content"]
             )
@@ -149,7 +149,7 @@ def main() -> None:
 
     client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
 
-    print(get_answer(client, tools, prompt))
+    print(get_answer(client, prompt))
 
 
 if __name__ == "__main__":

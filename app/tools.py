@@ -3,6 +3,7 @@ def read(file_path: str) -> str:
         return "\n".join(f.readlines())
 
 
-def write(file_path: str, content: str) -> None:
+def write(file_path: str, content: str) -> str:
     with open(file=file_path, mode="w") as f:
         f.writelines(content)
+    return "Created the file"
