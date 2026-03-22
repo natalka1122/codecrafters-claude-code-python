@@ -80,6 +80,23 @@ def get_answer(client: OpenAI, prompt: str) -> str:
                 },
             ),
         ),
+        ChatCompletionToolParam(
+            type="function",
+            function=FunctionDefinition(
+                name="Bash",
+                description="Execute a shell command",
+                parameters={
+                    "type": "object",
+                    "properties": {
+                        "command": {
+                            "type": "string",
+                            "description": "The command to execute",
+                        },
+                    },
+                    "required": ["command"],
+                },
+            ),
+        ),
     ]
     messages: list[ChatCompletionMessageParam] = [
         ChatCompletionUserMessageParam(role="user", content=prompt)
@@ -106,6 +123,8 @@ def get_answer(client: OpenAI, prompt: str) -> str:
             tool_data = my_tools.write(
                 file_path=arguments["file_path"], content=arguments["content"]
             )
+        elif function.name == "Bash":
+            tool_data = my_tools.bash(command=arguments["command"])
         else:
             raise NotImplementedError
         messages.append(
