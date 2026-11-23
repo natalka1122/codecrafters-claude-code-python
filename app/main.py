@@ -111,39 +111,42 @@ def get_answer(client: OpenAI, prompt: str) -> str:
     answer = chat.choices[0]
 
     while answer.finish_reason != "stop":
-        tool_calls: list[ChatCompletionMessageToolCallUnion] | None = answer.message.tool_calls
-        if tool_calls is None or len(tool_calls) != 1:
-            raise NotImplementedError
-        tool_call = cast(ChatCompletionMessageToolCall, tool_calls[0])
-        function = tool_call.function
-        arguments = json.loads(function.arguments)
-        if function.name == "Read":
-            tool_data = my_tools.read(file_path=arguments["file_path"])
-        elif function.name == "Write":
-            tool_data = my_tools.write(
-                file_path=arguments["file_path"], content=arguments["content"]
-            )
-        elif function.name == "Bash":
-            tool_data = my_tools.bash(command=arguments["command"])
-        else:
-            raise NotImplementedError
-        messages.append(
-            ChatCompletionAssistantMessageParam(
-                role="assistant",
-                tool_calls=[
-                    ChatCompletionMessageToolCallParam(
-                        id=tool_call.id,
-                        type="function",
-                        function={"name": function.name, "arguments": function.arguments},
-                    ),
-                ],
-            )
+        tool_calls: list[ChatCompletionMessageToolCallUnion] = (
+            [] if answer.message.tool_calls is None else answer.message.tool_calls
         )
-        messages.append(
-            ChatCompletionToolMessageParam(
-                role="tool", tool_call_id=tool_call.id, content=tool_data
+        for tool_call in tool_calls:
+            function = tool_call.function
+            arguments = json.loads(function.arguments)
+            if function.name == "Read":
+                tool_data = my_tools.read(file_path=arguments["file_path"])
+            elif function.name == "Write":
+                tool_data = my_tools.write(
+                    file_path=arguments["file_path"], content=arguments["content"]
+                )
+            elif function.name == "Bash":
+                tool_data = my_tools.bash(command=arguments["command"])
+            else:
+                raise NotImplementedError
+            messages.append(
+                ChatCompletionAssistantMessageParam(
+                    role="assistant",
+                    tool_calls=[
+                        ChatCompletionMessageToolCallParam(
+                            id=tool_call.id,
+                            type="function",
+                            function={
+                                "name": function.name,
+                                "arguments": function.arguments,
+                            },
+                        ),
+                    ],
+                )
             )
-        )
+            messages.append(
+                ChatCompletionToolMessageParam(
+                    role="tool", tool_call_id=tool_call.id, content=tool_data
+                )
+            )
         print(f"messages = {messages}", file=sys.stderr)
         chat = client.chat.completions.create(
             model="anthropic/claude-haiku-4.5",
